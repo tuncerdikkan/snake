@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Yılan Oyunu</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #222; color: white; text-align: center; }
+    canvas { background: #111; border: 3px solid #4caf50; }
+  </style>
+</head>
+<body>
+  <h1>Yılan Oyunu</h1>
+  <p>Skor: <span id="skor">0</span> | Ok tuşlarıyla oyna</p>
+  <canvas id="tuval" width="400" height="400"></canvas>
+  <p>Oyun bitince Boşluk tuşuna bas</p>
+
+  <script>
+    const tuval = document.getElementById("tuval");
+    const ctx = tuval.getContext("2d");
+    const skorYazi = document.getElementById("skor");
+    const kare = 20;
+    const adet = tuval.width / kare;
+
+    let yilan, yon, sonHareket, yem, skor, oyunBitti, dongu;
+
+    function baslat() {
+      yilan = [{ x: 10, y: 10 }];
+      yon = { x: 1, y: 0 };
+      sonHareket = yon;
+      skor = 0;
+      oyunBitti = false;
+      skorYazi.textContent = 0;
+      yemKoy();
+      clearInterval(dongu);
+      dongu = setInterval(guncelle, 120);
+    }
+
+    function yemKoy() {
+      do {
+        yem = {
+          x: Math.floor(Math.random() * adet),
+          y: Math.floor(Math.random() * adet)
+        };
+      } while (yilan.some(p => p.x === yem.x && p.y === yem.y));
+    }
+
+    function guncelle() {
+      sonHareket = yon;
+      const bas = { x: yilan[0].x + yon.x, y: yilan[0].y + yon.y };
+
+      const duvar = bas.x < 0 || bas.y < 0 || bas.x >= adet || bas.y >= adet;
+      const kendi = yilan.some(p => p.x === bas.x && p.y === bas.y);
+      if (duvar || kendi) {
+        oyunBitti = true;
+        clearInterval(dongu);
+        ciz();
+        return;
+      }
+
+      yilan.unshift(bas);
+      if (bas.x === yem.x && bas.y === yem.y) {
+        skor++;
+        skorYazi.textContent = skor;
+        yemKoy();
+      } else {
+        yilan.pop();
+      }
+      ciz();
+    }
+
+    function ciz() {
+      ctx.fillStyle = "#111";
+      ctx.fillRect(0, 0, tuval.width, tuval.height);
+
+      ctx.fillStyle = "red";
+      ctx.fillRect(yem.x * kare, yem.y * kare, kare - 2, kare - 2);
+
+      ctx.fillStyle = "#4caf50";
+      yilan.forEach(p => ctx.fillRect(p.x * kare, p.y * kare, kare - 2, kare - 2));
+
+      if (oyunBitti) {
+        ctx.fillStyle = "white";
+        ctx.font = "30px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("Oyun Bitti!", tuval.width / 2, tuval.height / 2);
+      }
+    }
+
+        document.addEventListener("keydown", (e) => {
+      const tus = e.key.toLowerCase();
+
+      if ((tus === "arrowup" || tus === "8") && sonHareket.y !== 1) yon = { x: 0, y: -1 };
+      else if ((tus === "arrowdown" || tus === "5") && sonHareket.y !== -1) yon = { x: 0, y: 1 };
+      else if ((tus === "arrowleft" || tus === "4") && sonHareket.x !== 1) yon = { x: -1, y: 0 };
+      else if ((tus === "arrowright" || tus === "6") && sonHareket.x !== -1) yon = { x: 1, y: 0 };
+      else if (tus === " " && oyunBitti) baslat();
+
+      if (tus.startsWith("arrow") || tus === " ") e.preventDefault();
+    });
+
+    baslat();
+  </script>
+</body>
+</html>
